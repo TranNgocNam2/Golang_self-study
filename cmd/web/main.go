@@ -1,11 +1,42 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+
+	_ "github.com/lib/pq"
 )
+
+// Database information
+const (
+	host     = "localhost"
+	port     = 5432
+	user     = "postgres"
+	password = "12345"
+	dbname   = "snippetbox"
+)
+
+func openDB() (*sql.DB, error) {
+	//Create connection string
+	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbname)
+	//Open connection
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, err
+	}
+	//Check connection
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("Connected to PostgreSQL!")
+	return db, nil
+}
 
 // Define an application struct to hold the application-wide dependencies for the
 // web application. For now we'll only include fields for the two custom loggers, but
@@ -40,6 +71,14 @@ func main() {
 	// file name and line number.
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
+	//Open connection with database
+	db, err := openDB()
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+	// We also defer a call to db.Close(), so that the connection pool is closed
+	// before the main() function exits.
+	defer db.Close()
 	//Initialize a new instance of our application struct, containing the dependencies
 	app := &application{
 		errorLog: errorLog,
@@ -58,6 +97,6 @@ func main() {
 	}
 
 	infoLog.Printf("Starting server on %s", *addr)
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	errorLog.Fatal(err) //error message
 }
