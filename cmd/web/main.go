@@ -45,40 +45,6 @@ func main() {
 		errorLog: errorLog,
 		infoLog:  infoLog,
 	}
-	// Use the http.NewServeMux() function to initialize a new servemux, then
-	// register the home function as the handler for the "/" URL pattern.
-	mux := http.NewServeMux()
-
-	// Create a file server which serves files out of the "./ui/static" directory.
-	// Note that the path given to the http.Dir function is relative to the project
-	// directory root.
-	fileServer := http.FileServer(http.Dir("./ui/static"))
-	mux.HandleFunc("/", app.home)
-
-	// Use the mux.Handle() function to register the file server as the handler for
-	// all URL paths that start with "/static/". For matching paths, we strip the
-	// "/static" prefix before the request reaches the file server
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-
-	// Register the two new handler functions and corresponding URL patterns with
-	mux.HandleFunc("/snippet/view", app.snippetView)
-	mux.HandleFunc("/snippet/create", app.snippetCreate)
-
-	// Use the http.ListenAndServe() function to start a new web server. We pass in
-	// two parameters: the TCP network address to listen on (in this case ":4000")
-	// and the servemux we just created. If http.ListenAndServe() returns an error
-	// we use the log.Fatal() function to log the error message and exit. Note
-	// that any error returned by http.ListenAndServe() is always non-nil.
-	//-----log.Printf("Starting server on : 4000")
-	//-----err := http.ListenAndServe(":4000", mux)
-
-	// The value returned from the flag.String() function is a pointer to the flag
-	// value, not the value itself. So we need to dereference the pointer (i.e.
-	// prefix it with the * symbol) before using it. Note that we're using the
-	// log.Printf() function to interpolate the address with the log message.
-	//-----log.Printf("Starting server on %s", *addr)
-
-	// Write messages using the two new loggers, instead of the standard logger.
 
 	// Initialize a new http.Server struct. We set the Addr and Handler fields so
 	// that the server uses the same network address and routes as before, and set
@@ -87,7 +53,8 @@ func main() {
 	server := &http.Server{
 		Addr:     *addr,
 		ErrorLog: errorLog,
-		Handler:  mux,
+		// Call the new app.routes() method to get the servemux containing our routes
+		Handler: app.routes(),
 	}
 
 	infoLog.Printf("Starting server on %s", *addr)
