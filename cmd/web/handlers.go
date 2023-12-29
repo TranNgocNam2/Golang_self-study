@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"html/template"
 	"net/http"
 	"strconv"
 
@@ -46,19 +47,12 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 // Add a snippetView handler function.
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
-	// Extract the value of the id parameter from the query string and try to
-	// convert it to an integer using the strconv.Atoi() function. If it can't
-	// be converted to an integer, or the value is less than 1, we return a 404 page
-	// not found response.
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || id < 1 {
 		app.notFound(w)
 		return
 	}
 
-	// Use the SnippetModel object's Get method to retrieve the data for a
-	// specific record based on its ID. If no matching record is found,
-	// return a 404 Not Found response
 	snippet, err := app.snippets.Get(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
@@ -69,10 +63,29 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Initialize a slice containing the paths to the view.tmpl file,
+	// plus the base layout and navigation partial that we made earlier
+	files := []string{"./ui/html/pages/view.tmpl", "./ui/html/base.tmpl", "./ui/html/partials/nav.tmpl"}
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	// Create an instance of a templateData struct holding the snippet data.
+	data := &templateData{
+		Snippet: snippet,
+	}
+
+	// Pass in the templateData struct when executing the template.
+	err = ts.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		app.serverError(w, err)
+	}
+
 	// Use the fmt.Fprintf() function to interpolate the id value with our response
 	// and write it to the http.ResponseWriter
 	// Write the snippet data as a plain-text HTTP response body.
-	fmt.Fprintf(w, "%+v", snippet)
+	// fmt.Fprintf(w, "%+v", snippet)
 }
 
 // Add a snippetCreate handler function.
