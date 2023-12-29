@@ -27,22 +27,28 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
-	for _, snippet := range snippets {
-		fmt.Fprintf(w, "%+v\n", snippet)
+	// for _, snippet := range snippets {
+	// 	fmt.Fprintf(w, "%+v\n", snippet)
+	// }
+
+	files := []string{"./ui/html/pages/home.tmpl", "./ui/html/base.tmpl", "./ui/html/partials/nav.tmpl"}
+
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, err)
+		return
 	}
 
-	// files := []string{"./ui/html/pages/home.tmpl", "./ui/html/base.tmpl", "./ui/html/partials/nav.tmpl"}
+	// Create an instance of a templateData struct holding the slice of snippets.
+	data := &templateData{
+		Snippets: snippets,
+	}
 
-	// ts, err := template.ParseFiles(files...)
-	// if err != nil {
-	// 	app.serverError(w, err)
-	// 	return
-	// }
-
-	// err = ts.ExecuteTemplate(w, "base", nil)
-	// if err != nil {
-	// 	app.serverError(w, err)
-	// }
+	// Pass in the templateData struct when executing the template.
+	err = ts.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		app.serverError(w, err)
+	}
 }
 
 // Add a snippetView handler function.
