@@ -80,20 +80,34 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 		// Use the Header().Set() method to add an 'Allow: POST' header to the
 		// response header map. The first parameter is the header name, and
 		// the second parameter is the header value.
-		w.Header().Set("Allow", "POST")
+		w.Header().Set("Allow", http.MethodPost)
 
 		// If it's not, use the w.WriteHeader() method to send a 405 status
 		// code and the w.Write() method to write a "Method Not Allowed"
 		// response body. We then return from the function so that the
 		// subsequent code is not executed.
 		// w.WriteHeader(405)
-		// w.Write([]byte("Method Not Allowed"))\
+		// w.Write([]byte("Method Not Allowed"))
 
 		// Use the http.Error() function to send a 405 status code and "Method Not
 		// Allowed" string as the response body.
 		app.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
+	// Create some variables holding dummy data. We'll remove these later on
+	// during the build.
+	title := "O snail"
+	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
+	expires := 7
 
-	w.Write([]byte("Create a new snippet"))
+	// Pass the data to the SnippetModel.Insert() method, receiving the
+	// ID of the new record back.
+	id, err := app.snippets.Insert(title, content, expires)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	// Redirect the user to the relevant page for the snippet
+	app.infoLog.Println(id)
+	http.Redirect(w, r, fmt.Sprintf("/snippet/view?id=%d", id), http.StatusSeeOther)
 }

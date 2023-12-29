@@ -23,7 +23,29 @@ type SnippetModel struct {
 
 // This will insert a new snippet into the database.
 func (m *SnippetModel) Insert(title string, content string, expires int) (int, error) {
-	return 0, nil
+	// Write the SQL statement we want to execute. I've split it over two lines
+	// for readability (which is why it's surrounded with backquotes instead
+	// of normal double quotes)
+	stmt := `INSERT INTO snippets (title, content, created, expires)
+			VALUES($1, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '1 DAY' * $3)`
+
+	// Use the Exec() method on the embedded connection pool to execute the
+	// statement. The first parameter is the SQL statement, followed by the
+	// title, content and expiry values for the placeholder parameters. This
+	// method returns a sql.Result type, which contains some basic
+	// information about what happened when the statement was executed.
+	_, err := m.DB.Exec(stmt, title, content, expires)
+	if err != nil {
+		return 0, err
+	}
+	var id int64
+	err = m.DB.QueryRow("Select lastval()").Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	// The ID returned has the type int64, so we convert it to an int type
+	// before returning
+	return int(id), nil
 }
 
 // This will return a specific snippet based on its id.
