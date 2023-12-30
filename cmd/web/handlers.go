@@ -3,11 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
-	"net/http"
-	"strconv"
-
 	"github.com/julienschmidt/httprouter"
+	"net/http"
 	"snippetbox.nam.net/internal/models"
+	"strconv"
+	"strings"
+	"unicode/utf8"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -66,22 +67,37 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-	// Use the r.PostForm.Get() method to retrieve the title and content
-	// from the r.PostForm map
 	title := r.PostForm.Get("title")
 	content := r.PostForm.Get("content")
-
-	// The r.PostForm.Get() method always returns the form data as a *string*.
-	// However, we're expecting our expires value to be a number, and want to
-	// represent it in our Go code as an integer. So we need to manually covert
-	// the form data to an integer using strconv.Atoi(), and we send a 400 Bad
-	// Request response if the conversion fails
 	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	// Initialize a map to hold any validation errors for the form fields.
+	fieldErrors := make(map[string]string)
 	id, err := app.snippets.Insert(title, content, expires)
+	// Check that the title value is not blank and is not more than 100
+	// characters long. If it fails either of those checks, add a message to the
+	// errors map using the field name as the key.
+	if strings.TrimSpace(title) == "" {
+		fieldErrors["title"] = "This field cannot be blank"
+	} else if utf8.RuneCountInString(title) > 100 {
+		fieldErrors["title"] = "This field cannot be more than 100 characters long"
+	}
+
+	// Check that the Content value isn't blank.
+	if strings.TrimSpace(content) == "" {
+		fieldErrors["content"] = "This field cannot be blank"
+	}
+	// Check the expires value matches one of the permitted values (1, 7 or 365)
+	if expires != 1 && expires != 7 && expires != 365 {
+		fieldErrors["expires"] = "This field must equal 1, 7 or 365"
+	}
+	if len(fieldErrors) > 0 {
+		fmt.Fprint(w, fieldErrors)
+		return
+	}
 	if err != nil {
 		app.serverError(w, err)
 	}
