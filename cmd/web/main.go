@@ -8,6 +8,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	_ "github.com/lib/pq"
+
 	"time"
 
 	"github.com/alexedwards/scs/postgresstore"

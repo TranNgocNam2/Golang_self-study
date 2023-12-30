@@ -18,6 +18,7 @@ type templateData struct {
 	Snippet     *models.Snippet
 	Snippets    []*models.Snippet
 	Form        any
+	Flash       string
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
@@ -63,8 +64,7 @@ func newTemplateCache() (map[string]*template.Template, error) {
 	return cache, nil
 }
 
-// Create a humanDate function which returns a nicely formatted string
-// representation of a time.Time object
+// Create a humanDate function which returns a nicely formatted stringrepresentation of a time.Time object
 func humanDate(t time.Time) string {
 	return t.Format("02 Jan 2006 at 15:04")
 }
