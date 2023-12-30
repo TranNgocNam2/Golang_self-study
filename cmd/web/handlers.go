@@ -12,10 +12,10 @@ import (
 )
 
 type snippetCreateForm struct {
-	Title   string
-	Content string
-	Expires int
-	validator.Validator
+	Title               string `form:"title"`
+	Content             string `form:"content"`
+	Expires             int    `form:"expires"`
+	validator.Validator `form:"-"`
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -77,34 +77,24 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+	// Declare a new empty instance of the snippetCreateForm struct.
+	var form snippetCreateForm
+	// Call the Decode() method of the form decoder, passing in the current
+	// request and *a pointer* to our snippetCreateForm struct. This will
+	// essentially fill our struct with the relevant values from the HTML form.
+	// If there is a problem, we return a 400 Bad Request response to the client.
+	err = app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-
-	// Create an instance of the snippetCreateForm struct containing the values
-	// from the form and an empty map for any validation errors.
-	form := snippetCreateForm{
-		Title:   r.PostForm.Get("title"),
-		Content: r.PostForm.Get("content"),
-		Expires: expires,
-	}
-
-	// Because the Validator type is embedded by the snippetCreateForm struct,
-	// we can call CheckField() directly on it to execute our validation checks.
-	// CheckField() will add the provided key and error message to the
-	// FieldErrors map if the check does not evaluate to true. For example, in
-	// the first line here we "check that the form.Title field is not blank". In
-	// the second, we "check that the form.Title field has a maximum character
-	// length of 100" and so on.
+	// Then validate and use the data as normal...
 	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
 	form.CheckField(validator.MaxChars(form.Title, 100), "title", "This field cannot be more than 100 characters long")
 	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
 	form.CheckField(validator.PermittedInt(form.Expires, 1, 7, 365), "expires", "This field must equal 1, 7 or 365")
 	// Use the Valid() method to see if any of the checks failed. If they did,
-	// then re-render the template passing in the form in the same way as
-	// before.
+	// then re-render the template passing in the form in the same way as before.
 	if !form.Valid() {
 		data := app.newTemplateData(r)
 		data.Form = form
