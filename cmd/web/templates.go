@@ -3,8 +3,9 @@ package main
 import (
 	"html/template"
 	"path/filepath"
-	"snippetbox.nam.net/internal/models"
 	"time"
+
+	"snippetbox.nam.net/internal/models"
 )
 
 // Define a templateData type to act as the holding structure for
@@ -16,6 +17,7 @@ type templateData struct {
 	CurrentYear int
 	Snippet     *models.Snippet
 	Snippets    []*models.Snippet
+	Form        any
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
