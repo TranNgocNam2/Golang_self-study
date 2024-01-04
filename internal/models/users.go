@@ -91,8 +91,5 @@ func (m *UserModel) Exists(id int) (bool, error) {
 	var exists bool
 	stmt := `SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)`
 	err := m.DB.QueryRow(stmt, id).Scan(&exists)
-	if err != nil {
-		return exists, err
-	}
-	return false, nil
+	return exists, err
 }
