@@ -226,8 +226,7 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
-	// Add the ID of the current user to the session, so that they are now
-	// 'logged in'.
+	// Add the ID of the current user to the session, so that they are now 'logged in'.
 	app.sessionManager.Put(r.Context(), "authenticatedUserId", id)
 	// Redirect the user to the create snippet page.
 	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)

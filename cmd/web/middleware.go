@@ -93,7 +93,13 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		exists, err := app.users.Exists(id)
 		if err != nil {
 			app.serverError(w, err)
+			return
 		}
+
+		// If a matching user is found, we know we know that the request is
+		// coming from an authenticated user who exists in our database. We
+		// create a new copy of the request (with an isAuthenticatedContextKey
+		// value of true in the request context) and assign it to r.
 		if exists {
 			ctx := context.WithValue(r.Context(), isAuthenticatedContextKey, true)
 			r = r.WithContext(ctx)
