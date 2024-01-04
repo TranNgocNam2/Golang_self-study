@@ -5,6 +5,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
+	"snippetbox.nam.net/ui"
 )
 
 // The routes() method returns a servemux containing our application routes.
@@ -20,9 +21,13 @@ func (app *application) routes() http.Handler {
 		app.notFound(w)
 	})
 
+	// Take the ui.Files embedded filesystem and convert it to a http.FS type so
+	// that it satisfies the http.FileSystem interface. We then pass that to the
+	// http.FileServer() function to create the file server handler.
+	fileServer := http.FileServer(http.FS(ui.Files))
+
 	// Update the pattern for the route for the static files.
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", fileServer))
+	router.Handler(http.MethodGet, "/static/*filepath", fileServer)
 
 	//// Create a new middleware chain containing the middleware specific to our
 	// dynamic application routes. For now, this chain will only contain the
