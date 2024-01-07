@@ -22,6 +22,12 @@ type SnippetModel struct {
 	DB *sql.DB
 }
 
+type SnippetModelInterface interface {
+	Insert(title string, content string, expires int) (int, error)
+	Get(id int) (*Snippet, error)
+	Latest() ([]*Snippet, error)
+}
+
 // This will insert a new snippet into the database.
 func (m *SnippetModel) Insert(title string, content string, expires int) (int, error) {
 	// Write the SQL statement we want to execute. I've split it over two lines
@@ -87,7 +93,7 @@ func (m *SnippetModel) Get(id int) (*Snippet, error) {
 }
 
 // This will return the 10 most recently created snippets
-func (m *SnippetModel) Lastes() ([]*Snippet, error) {
+func (m *SnippetModel) Latest() ([]*Snippet, error) {
 	// Write the SQL statement we want to execute.
 	stmt := `SELECT id, title, content, created, expires FROM snippets
 			WHERE expires > CURRENT_TIMESTAMP
