@@ -52,6 +52,7 @@ func openDB() (*sql.DB, error) {
 // web application. For now we'll only include fields for the two custom loggers, but
 // we'll add more to it as the build progresses.
 type application struct {
+	debug          bool
 	errorLog       *log.Logger
 	infoLog        *log.Logger
 	snippets       models.SnippetModelInterface
@@ -66,7 +67,7 @@ func main() {
 	// and some short help text explaining what the flag controls. The value of the
 	// flag will be stored in the addr variable at runtime
 	addr := flag.String("addr", ":4000", "HTTP network address")
-
+	debug := flag.Bool("debug", false, "Enable debug mode")
 	// Importantly, we use the flag.Parse() function to parse the command-line flag.
 	// This reads in the command-line flag value and assigns it to the addr
 	// variable. You need to call this *before* you use the addr variable
@@ -119,6 +120,7 @@ func main() {
 
 	//Initialize a new instance of our application struct, containing the dependencies
 	app := &application{
+		debug:          *debug,
 		errorLog:       errorLog,
 		infoLog:        infoLog,
 		snippets:       &models.SnippetModel{DB: db},
